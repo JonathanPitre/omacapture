@@ -71,11 +71,11 @@ Omarchy owns global shortcuts, and the plugin never edits your configuration on 
 omacapture keybinds status            # which preset keys are free, and which preset is saved
 omacapture keybinds install super-i   # Super+I area, Super+Shift+I annotate (press A in the overlay for windows)
 omacapture keybinds install print     # take over Print (unbinds Omarchy's screenshot key), Shift/Ctrl/Super+Ctrl variants
-omacapture keybinds restore           # re-apply the saved preset if Hyprland lost the block (also runs when the daemon starts)
+omacapture keybinds restore           # explicitly re-apply the saved preset if Hyprland lost the block
 omacapture keybinds remove            # take the block out again
 ```
 
-The last successful install is stored as `[keybinds] preset` in `~/.config/omacapture/config.toml` (`print` or `super-i`) so a reboot restores Print instead of falling back to Super+I. Preferences → Shortcuts opens on that saved preset, not always Super+I.
+The last successful install is stored as `[keybinds] preset` in `~/.config/omacapture/config.toml` (`print` or `super-i`). Preferences → Shortcuts opens on the installed preset, falling back to that saved choice instead of always Super+I. Daemon startup never rewrites bindings; run `restore` explicitly when needed. Remove clears the saved choice even if the managed block is already absent.
 
 This appends a clearly marked block to `~/.config/hypr/bindings.lua` (after backing it up), refuses if a key is already bound unless you pass `--force`, and reloads Hyprland. Or paste it yourself:
 

@@ -359,6 +359,9 @@ impl Config {
                         if cfg.quick_access.shortcuts.validate().is_err() {
                             cfg.quick_access.shortcuts = QuickAccessShortcuts::default();
                         }
+                        if cfg.keybinds.preset.as_deref().is_some_and(|p| crate::keybinds::Preset::from_config_name(p).is_none()) {
+                            cfg.keybinds.preset = None;
+                        }
                     }
                     cfg
                 }
@@ -496,6 +499,9 @@ impl Config {
         if !(0.0..=1024.0).contains(&self.annotate.default_padding) {
             anyhow::bail!("annotate.default_padding must be 0-1024");
         }
+        if self.keybinds.preset.as_deref().is_some_and(|p| crate::keybinds::Preset::from_config_name(p).is_none()) {
+            anyhow::bail!("keybinds.preset must be print or super-i");
+        }
         Ok(())
     }
 }
@@ -528,5 +534,21 @@ fn deep_merge(target: &mut serde_json::Value, patch: &serde_json::Value) {
             }
         }
         (t, p) => *t = p.clone(),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Config;
+
+    #[test]
+    fn invalid_keybind_preset_rejects_entire_config_patch() {
+        let mut cfg = Config::default();
+        cfg.general.quality = 80;
+        cfg.keybinds.preset = Some("print".into());
+        let patch = serde_json::json!({"general": {"quality": 20}, "keybinds": {"preset": "typo"}});
+        assert!(cfg.merge_json(&patch).is_err());
+        assert_eq!(cfg.general.quality, 80);
+        assert_eq!(cfg.keybinds.preset.as_deref(), Some("print"));
     }
 }

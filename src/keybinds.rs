@@ -173,17 +173,6 @@ pub fn remembered_preset() -> Preset {
     detect_preset(&bindings_file()).or_else(saved_preset).unwrap_or(Preset::SuperI)
 }
 
-pub fn restore_from_config(reload: bool) -> Result<bool> {
-    let saved = saved_preset().or_else(|| {
-        let detected = detect_preset(&bindings_file());
-        if let Some(preset) = detected {
-            remember_preset(Some(preset));
-        }
-        detected
-    });
-    restore(&bindings_file(), saved, reload)
-}
-
 pub fn saved_preset() -> Option<Preset> {
     crate::config::Config::load().keybinds.preset.as_deref().and_then(Preset::from_config_name)
 }
@@ -311,8 +300,9 @@ pub fn run(cmd: KeybindsCommand) -> Result<()> {
         }
         KeybindsCommand::Remove { file, no_reload } => {
             let file = file.unwrap_or_else(bindings_file);
-            if remove(&file, !no_reload)? {
-                remember_preset(None);
+            let removed = remove(&file, !no_reload)?;
+            remember_preset(None);
+            if removed {
                 println!("Removed Omacapture bindings from {}", file.display());
             } else {
                 println!("No Omacapture bindings found in {}", file.display());

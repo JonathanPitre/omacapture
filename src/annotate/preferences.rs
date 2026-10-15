@@ -486,14 +486,16 @@ pub fn open(gb: &Rc<Omacapture>) {
         let preset_row = preset_row.clone();
         let r = refresh_status.clone();
         let win = win.clone();
+        let config = gb.config.clone();
         install_btn.connect_clicked(move |_| {
             let preset = crate::keybinds::preset_from_combo(preset_row.selected());
             let taken = crate::keybinds::conflicts(preset);
             let file = crate::keybinds::bindings_file();
             let r2 = r.clone();
+            let config = config.clone();
             let do_install = move || match crate::keybinds::install(preset, &file, true) {
                 Ok(_) => {
-                    crate::keybinds::remember_preset(Some(preset));
+                    config.update(|c| c.keybinds.preset = Some(preset.config_name().into()));
                     r2();
                 }
                 Err(e) => tracing::error!("keybinds install failed: {e}"),
@@ -518,10 +520,10 @@ pub fn open(gb: &Rc<Omacapture>) {
     }
     {
         let r = refresh_status.clone();
+        let config = gb.config.clone();
         remove_btn.connect_clicked(move |_| {
             match crate::keybinds::remove(&crate::keybinds::bindings_file(), true) {
-                Ok(true) => crate::keybinds::remember_preset(None),
-                Ok(false) => {}
+                Ok(_) => config.update(|c| c.keybinds.preset = None),
                 Err(e) => tracing::error!("keybinds remove failed: {e}"),
             }
             r();
